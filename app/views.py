@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .emails import *
+from django.contrib.auth import get_user_model
 
 class RegisterView(APIView):
     
@@ -43,3 +44,23 @@ class VerifyOTPView(APIView):
         except Exception as e:
             print(e)
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+class ChangePasswordView(APIView):
+    def post(self, request, id):
+        password = request.data.get('password')
+        new_password = request.data.get('new_password')
+        
+        try:
+            user = get_user_model().objects.get(pk=id)
+        except get_user_model().DoesNotExist:
+            return Response({'msg': 'User not found'}, status=404)
+        
+        
+        if not user.check_password(password):
+            return Response({'error': 'Incorrect current password'}, status=400)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({'success': 'Password changed successfully'}, status=200)
