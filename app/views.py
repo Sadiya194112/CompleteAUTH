@@ -12,6 +12,8 @@ from .serializer import RegistrationSerializer, UserLoginSerializer, RequestRese
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 
+User = get_user_model()
+
 def get_tokens_for_user(user):
     if not user.is_active:
       raise AuthenticationFailed("User is not active")
@@ -98,25 +100,13 @@ class VerifyOTPView(APIView):
 
 class ChangePasswordView(APIView):
     def post(self, request, id):
-        password = request.data.get('password')
-        new_password = request.data.get('new_password')
-        
-        try:
-            user = get_user_model().objects.get(pk=id)
-        except get_user_model().DoesNotExist:
-            return Response({'msg': 'User not found'}, status=404)
-        
-        
-        if not user.check_password(password):
-            return Response({'error': 'Incorrect current password'}, status=400)
+        user = get_object_or_404(User, pk=id)
+        serializer = ChangePasswordSerializer(data=request.data, context={'user':user})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'success': 'Password changed successfully'}, status=200)
+        return Response(serializer.errors, status=400)
 
-        user.set_password(new_password)
-        user.save()
-        return Response({'success': 'Password changed successfully'}, status=200)
-
-
-
-User = get_user_model()
 
 class RequestResetPasswordView(APIView):
     def post(self, request):

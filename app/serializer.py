@@ -26,8 +26,23 @@ class UserLoginSerializer(serializers.Serializer):
 class VerifyAccountSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField()
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
     
+    def validate(self, data):
+        user = self.context['user']
+        if not user.check_password(data['password']):
+            raise serializers.ValidationError({'error': 'Incorrect current password'})
     
+    def save(self, **kwargs):
+        user = self.context['user']
+        new_password = self.validated_data['new_password']
+        user.set_password(new_password)
+        user.save()
+        return user
 
 class RequestResetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
