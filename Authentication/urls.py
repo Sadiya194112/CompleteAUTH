@@ -6,5 +6,6 @@ from app.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('register/', RegisterView.as_view()),
-    path('verify-otp/', VerifyOTPView.as_view())
+    path('verify-otp/', VerifyOTPView.as_view()),
+    path('change-password/<int:id>/', ChangePasswordView.as_view())
 ]
